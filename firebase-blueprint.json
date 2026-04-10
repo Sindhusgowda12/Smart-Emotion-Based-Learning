@@ -1,0 +1,54 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "role", "createdAt"]
+    },
+    "EmotionLog": {
+      "title": "Emotion Log",
+      "description": "Stores detected emotions during learning sessions.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "emotion": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "topicId": { "type": "string" }
+      },
+      "required": ["userId", "emotion", "timestamp", "topicId"]
+    },
+    "Completion": {
+      "title": "Lesson Completion",
+      "description": "Stores completed learning modules.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "topicId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "topicId", "timestamp"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Collection of user profiles."
+    },
+    "emotionLogs/{logId}": {
+      "schema": "EmotionLog",
+      "description": "Collection of emotion logs."
+    },
+    "completions/{completionId}": {
+      "schema": "Completion",
+      "description": "Collection of lesson completions."
+    }
+  }
+}

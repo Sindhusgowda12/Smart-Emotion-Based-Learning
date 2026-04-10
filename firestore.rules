@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required, email format)
+    //   - displayName: string (required)
+    //   - role: string (required, ['student', 'admin'])
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: emotionLogs
+    // Document ID: {logId}
+    // Fields:
+    //   - userId: string (required)
+    //   - emotion: string (required)
+    //   - timestamp: timestamp (required)
+    //   - topicId: string (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         request.auth.token.email == "sindhus8012@gmail.com");
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'createdAt']) &&
+             data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             data.displayName is string && data.displayName.size() > 0 && data.displayName.size() < 100 &&
+             data.role in ['student', 'admin'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidEmotionLog(data) {
+      return hasOnlyAllowedFields(['userId', 'emotion', 'timestamp', 'topicId']) &&
+             data.userId == request.auth.uid &&
+             data.emotion is string && data.emotion.size() > 0 && data.emotion.size() < 50 &&
+             data.timestamp is timestamp &&
+             data.topicId is string && data.topicId.size() > 0;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if (isOwner(userId) && isValidUser(request.resource.data) && 
+                      request.resource.data.role == resource.data.role) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /emotionLogs/{logId} {
+      allow read: if isAdmin() || (isAuthenticated() && (resource.data.userId == request.auth.uid));
+      allow create: if isAuthenticated() && isValidEmotionLog(request.resource.data);
+      allow delete: if isAdmin() || (isAuthenticated() && (resource.data.userId == request.auth.uid));
+    }
+
+    match /completions/{completionId} {
+      allow read: if isAdmin() || (isAuthenticated() && (resource.data.userId == request.auth.uid));
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

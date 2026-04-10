@@ -1,0 +1,5 @@
+{
+  "name": "EmoLearn: Smart Adaptive Learning",
+  "description": "An AI-powered learning platform that detects student emotions via webcam and adapts content in real-time to improve engagement and understanding.",
+  "requestFramePermissions": ["camera", "microphone"]
+}
