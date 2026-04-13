@@ -62,10 +62,6 @@ The project implements strict Firebase Security Rules to ensure:
 - Teachers can view logs for their assigned classes.
 - Administrators have full oversight of system performance and user roles.
 
-## 📄 License
-
-This project was developed as part of a final year project submission.
-
 ---
 **Developed by:** Sindhu S
 **Project Name:** Smart Emotion-Based Learning Web Platform
